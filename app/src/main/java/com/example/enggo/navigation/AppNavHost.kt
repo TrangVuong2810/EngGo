@@ -6,12 +6,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import com.example.enggo.data.DefaultAppContainer
 import com.example.enggo.ui.course.navigation.coursesScreen
+import com.example.enggo.ui.dictionary.navigation.DICTIONARY_ROUTE
+import com.example.enggo.ui.dictionary.navigation.bookmarkScreen
 import com.example.enggo.ui.course.navigation.navigateToCourses
 import com.example.enggo.ui.dictionary.navigation.dictionaryScreen
+import com.example.enggo.ui.flashcard.navigation.flashcardHome
 import com.example.enggo.ui.unit.navigation.navigateToUnitList
 import com.example.enggo.ui.unit.navigation.unitListScreen
 import com.example.enggo.ui.home.navigation.HOME_ROUTE
+import com.example.enggo.ui.home.navigation.gptScreen
 import com.example.enggo.ui.home.navigation.homeScreen
+import com.example.enggo.ui.home.navigation.navigateToGPTQuestions
 import com.example.enggo.ui.home.navigation.navigateToHome
 import com.example.enggo.ui.lesson.navigation.exerciseScreens
 import com.example.enggo.ui.lesson.navigation.lessonScreen
@@ -46,20 +51,31 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
-        homeScreen()
+        homeScreen(onRecentCourseClick = navController::navigateToUnitList, onGenerateQuestionClick = navController::navigateToGPTQuestions)
+        gptScreen(onBackPressed = navController::popBackStack)
         coursesScreen(onCourseClick = navController::navigateToUnitList)
         unitListScreen(onBackPressed = navController::popBackStack, onLessonPressed = navController::navigateToLesson)
         lessonScreen(
             onBackPressed = navController::popBackStack,
-            onGoToExercise = { lessonId -> navController.navigateToExerciseScreen(lessonId, 0) } // first exercise
+            onGoToExercise = { lessonId, lessonName -> navController.navigateToExerciseScreen(lessonId, lessonName, 0) } // first exercise
         )
-        exerciseScreens(onBackPressed = navController::navigateToCourses, onNextExercisePressed = navController::navigateToExerciseScreen) // TODO: backPressed
+        exerciseScreens(onBackPressed = navController::navigateToCourses, onNextExercisePressed = navController::navigateToExerciseScreen, navController = navController) // TODO: backPressed
         registerScreen (onRegisterClick = navController::navigateToLogin, redirectToLogin = navController::navigateToLogin)
         loginScreen (onLoginClick = navController::navigateToHome , redirectToRegister = navController::navigateToRegister)
-        dictionaryScreen(appContainer)
+        dictionaryScreen(appContainer, navController)
+
+        bookmarkScreen(
+            onItemClick = { wordIndex ->
+                navController.navigate("$DICTIONARY_ROUTE?wordIndex=$wordIndex")
+            },
+            onBackToDictionary = {
+                navController.navigate(DICTIONARY_ROUTE)
+            }
+        )
         AccountManagementScreen (onPasswordChangeClick = navController::navigateToPasswordChange, onBackClick = navController::navigateToProfile, onLogoutClick = navController::navigateToLogin)
         ChangePasswordScreen (onBackClick = navController::navigateToProfileAccount)
         profileScreen (onLogoutClick = navController::navigateToLogin, onClickProfile = navController::navigateToProfileView, onClickAccount = navController::navigateToProfileAccount)
         profileViewScreen (onBackClick = navController::navigateToProfile)
+        flashcardHome(navController)
     }
 }
